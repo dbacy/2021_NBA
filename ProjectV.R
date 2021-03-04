@@ -59,28 +59,27 @@ standings <- standings[order(-standings$W),]
 
 # point_leader <- stat_leaders[,c(order[- stat_leaders$Points] , "Player_Id_Str")]
  point_leader <- stat_leaders[order(-stat_leaders$Points),] 
- pointLeader <- point_leader[5,c("Player_Id_Str", "Points"  )]
+ pointLeader <- point_leader[1:5,c("Player_Id_Str", "Points"  )]
  
  rebound_leader <- stat_leaders[order(-stat_leaders$Rebounds),] 
- reboundLeader <- rebound_leader[5,c("Player_Id_Str", "Rebounds"  )]
+ reboundLeader <- rebound_leader[1:5,c("Player_Id_Str", "Rebounds"  )]
  
  assist_leader <- stat_leaders[order(-stat_leaders$Assists),] 
- assistLeader <- assist_leader[5,c("Player_Id_Str", "Assists"  )]
+ assistLeader <- assist_leader[1:5,c("Player_Id_Str", "Assists"  )]
  
  block_leader <- stat_leaders[order(-stat_leaders$Blocks),] 
- blockLeader <- block_leader[5,c("Player_Id_Str", "Blocks"  )]
+ blockLeader <- block_leader[1:5,c("Player_Id_Str", "Blocks"  )]
  
  threeMade_leader <- stat_leaders[order(-stat_leaders$Threes_Made),] 
- threeMadeLeader <- threeMade_leader[5,c("Player_Id_Str", "Threes_Made"  )]
+ threeMadeLeader <- threeMade_leader[1:5,c("Player_Id_Str", "Threes_Made"  )]
  
  steal_leader <- stat_leaders[order(-stat_leaders$Steals),] 
- stealLeader <- steal_leader[5,c("Player_Id_Str", "Steals"  )]
+ stealLeader <- steal_leader[1:5,c("Player_Id_Str", "Steals"  )]
  
  
 
 ui <- fluidPage(
   theme = shinytheme("darkly"),
-  tags$div(img(scr = "")),
   navbarPage(
     "2021 NBA",
     
@@ -137,9 +136,24 @@ ui <- fluidPage(
                tabPanel("Blocks", tableOutput("blockLeader")),
                tabPanel("Threes_Made", tableOutput("threeMadeLeader")),
                tabPanel("Steals", tableOutput("stealLeader"))
-             ) #navbarMenu
+             ), #navbarMenu
+    
+            
+    
+            tabPanel("Videos",
+                     sidebarPanel(
+                       
+                     ),
+                     mainPanel(
+                       tags$video(
+                         HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/vScCsVwZldg" 
+                              frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
+                              gyroscope; picture-in-picture" allowfullscreen></iframe>'))
+                     ),
+                     )
    
   ) #navbarPage
+  
 ) #fluidPage
 
 
