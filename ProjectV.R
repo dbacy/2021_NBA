@@ -4,6 +4,11 @@ library(shiny)
 library(shinythemes)
 library(data.table)
 library(RCurl)
+library(ggplot2)
+
+
+
+###########################################################################################################
 
 
 games_2021 <-
@@ -11,20 +16,13 @@ games_2021 <-
     "https://raw.githubusercontent.com/MattC137/Open_Data/master/Data/Sports/NBA/NBA_2021_Games.csv"
   )
 
-# Odds <-
-#   games_2021 %>% filter(Result == "TBD",!is.na(Money_Line)) %>%
-#     select(
-#       Date,
-#       Team,
-#       Opponent,
-#       Line_Favored,
-#       Line_Amount,
-#       Over_Under,
-#       Money_Line,
-#       Money_Line_Opp,
-#       Implied_Odds,
-#       Implied_Odds_Opp
-#     )
+
+
+player_2021 <-
+  read.csv(
+    "https://raw.githubusercontent.com/MattC137/Open_Data/master/Data/Sports/NBA/NBA_2021_Players.csv"
+  )
+
 
 
 box_2021 <-
@@ -32,30 +30,67 @@ box_2021 <-
     "https://raw.githubusercontent.com/MattC137/Open_Data/master/Data/Sports/NBA/NBA_2021_Box_Score.csv"
   )
 
-# standings <-
-#   games_2021 %>% filter(Season_Type == "Regular-Season", Result != "TBD") %>%
-#   group_by(Team) %>%
-#   summarize(
-#     W = sum(Result == "W"),
-#     L = sum(Result == "L"),
-#     Pct = W / (W - L),
-#     ppg = mean(Points_For),
-#     opp_ppg = mean(Points_Against)
-#   )
+
+###########################################################################################################
+
+
+
+stat_leaders <-
+  box_2021 %>%  filter(Season_Type == "Regular-Season", Played == TRUE) %>%
+  group_by(Player_Id_Str) %>%
+  summarise(
+    Points = mean(Points),
+    Rebounds = mean(Rebounds),
+    Assists = mean(Assists),
+    Blocks = mean(Blocks),
+    Threes_Made = mean(Threes_Made),
+    Steals = mean(Steals)
+  )
+
+player_info <-
+  player_2021 %>% select(
+    Player,
+    Position,
+    Salary,
+    Draft_Year,
+    Draft_Round,
+    Draft_Pick,
+    Draft_Team,
+    Team
+  )
+
+position_salary <-
+  player_2021 %>% filter(Salary != "NA") %>% 
+  select(Position,
+         Salary)
+
+Odds <-
+  games_2021 %>% filter(Result == "TBD",!is.na(Money_Line)) %>%
+  select(
+    Date,
+    Team,
+    Opponent,
+    Line_Favored,
+    Line_Amount,
+    Over_Under,
+    Money_Line,
+    Money_Line_Opp,
+    Implied_Odds,
+    Implied_Odds_Opp
+  )
+
+standings <-
+  games_2021 %>% filter(Season_Type == "Regular-Season", Result != "TBD") %>%
+  group_by(Team) %>%
+  summarize(
+    W = sum(Result == "W"),
+    L = sum(Result == "L"),
+    Pct = W / (W - L),
+    ppg = mean(Points_For),
+    opp_ppg = mean(Points_Against)
+  )
 
 standings <- standings[order(-standings$W),]
-
-# stat_leaders <-
-#   box_2021 %>%  filter(Season_Type == "Regular-Season", Played == TRUE) %>%
-#   group_by(Player_Id_Str) %>%
-#   summarise(
-#     Points = mean(Points),
-#     Rebounds = mean(Rebounds),
-#     Assists = mean(Assists),
-#     Blocks = mean(Blocks),
-#     Threes_Made = mean(Threes_Made),
-#     Steals = mean(Steals)
-#   )
 
 # point_leader <- stat_leaders[,c(order[- stat_leaders$Points] , "Player_Id_Str")]
  point_leader <- stat_leaders[order(-stat_leaders$Points),] 
@@ -76,7 +111,13 @@ standings <- standings[order(-standings$W),]
  steal_leader <- stat_leaders[order(-stat_leaders$Steals),] 
  stealLeader <- steal_leader[1:5,c("Player_Id_Str", "Steals"  )]
  
+ plot <-
+   ggplot(position_salary, aes( x = Position, y = Salary))+ geom_point() + 
+   scale_y_continuous(labels=scales::dollar_format())
  
+
+ 
+ ###########################################################################################################
 
 ui <- fluidPage(
   theme = shinytheme("darkly"),
@@ -142,21 +183,44 @@ ui <- fluidPage(
     
             tabPanel("Videos",
                      sidebarPanel(
-                       
+                       img(src = "NBALogo.jfif", height = 600, width = 250)
                      ),
                      mainPanel(
-                       tags$video(
-                         HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/vScCsVwZldg" 
-                              frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
-                              gyroscope; picture-in-picture" allowfullscreen></iframe>'))
-                     ),
-                     )
+                       
+                         tags$iframe( width="560" ,height="315" ,
+                                      src="https://www.youtube.com/embed/vScCsVwZldg" 
+                                      ,frameborder="0" ,allow="accelerometer;
+                                      autoplay; clipboard-write; encrypted-media;
+                                      gyroscope; picture-in-picture" 
+                                      ,allowfullscreen=NA),
+                         tags$iframe( width="560" ,height="315" ,
+                                      src="https://www.youtube.com/embed/TqcApsGRzWw" 
+                                      ,frameborder="0" ,allow="accelerometer; 
+                                      autoplay; clipboard-write; encrypted-media; 
+                                      gyroscope; picture-in-picture" 
+                                      ,allowfullscreen=NA)
+                         
+                     ), #mainPanel
+                     ), #tabPanel
+    
+            tabPanel("Player Info",
+              
+                     mainPanel(
+                       tabsetPanel(
+                         tabPanel("Info",tableOutput("player_info")),
+                         tabPanel("Plot",plotOutput("plot"))
+                       ), #tabsetPanel
+                     ), #mainPanel
+            ) #tabPanel
+    
    
   ) #navbarPage
   
 ) #fluidPage
 
 
+ ###########################################################################################################
+ 
 
 server <- function(input, output) {
   output$txtout <- renderText({
@@ -194,6 +258,16 @@ server <- function(input, output) {
   output$stealLeader <- renderTable({
     stealLeader
   })
+  
+  output$player_info <- renderTable({
+    player_info
+  })
+  
+  output$plot <- renderPlot({
+    plot
+  })
 } #server
+ 
+ ###########################################################################################################
 
 shinyApp(ui = ui, server = server)
